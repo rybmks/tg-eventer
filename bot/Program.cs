@@ -6,16 +6,28 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;
+using Microsoft.Extensions.Configuration;
 using System.Net.WebSockets;
 
 namespace bot
 {
     internal class Program
     {
-        public static readonly TelegramBotClient botClient = new TelegramBotClient("7185443093:AAGJ5X7cHjt2s41uTSPFQwb68i1dL3Pp0hM");
-      
+        
         static async Task Main(string[] args)
         {
+            var config = new ConfigurationBuilder().AddJsonFile(@"C:/Users/rybal/source/repos/eventer_bot/cfg/appsettings.json").Build();
+            
+            string? token = config["TelegramBot:Token"];
+
+            if (token == null) 
+            {
+                Console.WriteLine("Set token to cfg!");
+                return;
+            }
+
+            TelegramBotClient botClient = new TelegramBotClient(token);
+
             var cts = new CancellationTokenSource();
             var cancellationToken = cts.Token;
            
