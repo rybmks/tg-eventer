@@ -29,14 +29,15 @@ namespace bot
                 } 
             };
 
-            ComandsHandler handler = new ComandsHandler(botClient);
+            CommandsHandler handler = new CommandsHandler(botClient);
+            BotUpdates botUpdates = new BotUpdates(handler);
 
             await handler.SetCommands();
 
 
             botClient.StartReceiving(
-                BotUpdates.Update,
-                BotUpdates.Error,
+                botUpdates.Update,
+                botUpdates.Error,
                 receiverOptions,
                 cancellationToken
                 );
