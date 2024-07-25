@@ -8,6 +8,7 @@ using Telegram.Bot.Polling;
 using Telegram.Bot.Types.Enums;
 using Microsoft.Extensions.Configuration;
 using System.Net.WebSockets;
+using System.Reflection;
 
 namespace bot
 {
@@ -16,7 +17,14 @@ namespace bot
         
         static async Task Main(string[] args)
         {
-            var config = new ConfigurationBuilder().AddJsonFile(@"C:/Users/rybal/source/repos/eventer_bot/cfg/appsettings.json").Build();
+            string currentDirectory = Directory.GetCurrentDirectory();
+
+            string projectRootDirectory = GetProjectRootDirectory(currentDirectory);
+
+            string cfgPath = Path.Combine(projectRootDirectory, "cfg", "appsettings.json");
+
+
+            var config = new ConfigurationBuilder().AddJsonFile(cfgPath).Build();
             
             string? token = config["TelegramBot:Token"];
 
@@ -27,6 +35,7 @@ namespace bot
             }
 
             TelegramBotClient botClient = new TelegramBotClient(token);
+            BotServicesContainer.BotClient = botClient;
 
             var cts = new CancellationTokenSource();
             var cancellationToken = cts.Token;
@@ -37,19 +46,16 @@ namespace bot
                 { 
                     UpdateType.Message,
                     UpdateType.MyChatMember,
-                    UpdateType.ChatMember
+                    UpdateType.ChatMember,
+                    UpdateType.CallbackQuery
                 } 
             };
 
-            CommandsHandler handler = new CommandsHandler(botClient);
-            BotUpdates botUpdates = new BotUpdates(handler);
-
-            await handler.SetCommands();
-
+            await CommandsHandler.ShowCommands();
 
             botClient.StartReceiving(
-                botUpdates.Update,
-                botUpdates.Error,
+                BotUpdates.Update,
+                BotUpdates.Error,
                 receiverOptions,
                 cancellationToken
                 );
@@ -57,6 +63,19 @@ namespace bot
             Console.WriteLine("bot is started");
             Console.ReadLine();
             cts.Cancel();
+        }
+        private static string GetProjectRootDirectory(string startDirectory)
+        {
+            DirectoryInfo directoryInfo = new DirectoryInfo(startDirectory);
+            while (directoryInfo.Parent != null)
+            {
+                if (Directory.Exists(Path.Combine(directoryInfo.FullName, "cfg")))
+                {
+                    return directoryInfo.FullName;
+                }
+                directoryInfo = directoryInfo.Parent;
+            }
+            throw new DirectoryNotFoundException("Project root directory with 'cfg' not found.");
         }
     }
 }
