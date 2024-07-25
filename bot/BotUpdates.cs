@@ -5,44 +5,32 @@ using Telegram.Bot.Types.Enums;
 
 namespace bot
 {
-    public class BotUpdates
+    public static class BotUpdates
     {
-        private readonly CommandsHandler _handler;
-        public BotUpdates(CommandsHandler handler)
+        public static async Task Update(ITelegramBotClient botClient, Update update, CancellationToken token)
         {
-            _handler = handler;
-        }
-        public async Task Update(ITelegramBotClient botClient, Update update, CancellationToken token)
-        {
-            
             Console.WriteLine(update.Type);
 
-
-            if (update.Message is Message message && message.Text != null)
+            if (update.CallbackQuery != null)
+            {
+                await CallbackHandler.HandleCallback(botClient, update, token);
+            }
+            if (update.Message is Message message && message.Text != null && message.Text.StartsWith('/'))
             {
                 var commandText = message.Text.Trim('/');
-                var commands = _handler.commands;
+                var commands = CommandsHandler.commands;
 
-                if (commands.ContainsKey(commandText)) 
+                if (commands != null && commands.ContainsKey(commandText))
                 {
-                    await commands[commandText](update.Message.Chat.Id);
+                    await commands[commandText](message);
                 }
             }
-           
             else if (update?.Type is UpdateType.MyChatMember && update.MyChatMember?.NewChatMember is ChatMemberMember)
             {
                 await botClient.SendTextMessageAsync(update.MyChatMember.Chat.Id, "Hello, I am eventer_bot!");
             }
         }
-      
-        
-        
-        
-        
-        
-        
-        
-        public Task Error(ITelegramBotClient client, Exception exception, CancellationToken token)
+        public static Task Error(ITelegramBotClient client, Exception exception, CancellationToken token)
         {
             var errorMessage = exception switch
             {
