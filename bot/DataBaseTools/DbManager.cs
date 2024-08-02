@@ -110,8 +110,6 @@ namespace bot
 
                 using var transaction = await connection.BeginTransactionAsync();
 
-                await EnsureUserExistsAsync(user, connection);
-
                 long event_id = await CheckEventExists(chatId, eventName, connection);
 
                 if (event_id > 0)
@@ -341,10 +339,12 @@ namespace bot
                 {
                     getUserCommand.Parameters.AddWithValue("userid", user.Id);
 
-                    using NpgsqlDataReader dataReader = await getUserCommand.ExecuteReaderAsync();
+                    using NpgsqlDataReader dataReader = await getUserCommand.ExecuteReaderAsync(); 
 
                     if (!dataReader.HasRows)
                     {
+                        await dataReader.DisposeAsync();
+                       
                         using (var insertUserCommand = new NpgsqlCommand("INSERT INTO users (id, username) VALUES (@id, @username);", connection))
                         {
                             insertUserCommand.Parameters.AddWithValue("id", userId);
@@ -367,7 +367,7 @@ namespace bot
                                 updateUsername.Parameters.AddWithValue("newusername", username);
                                 updateUsername.Parameters.AddWithValue("id", user.Id);
 
-                                await updateUsername.ExecuteNonQueryAsync();
+                                await updateUsername.ExecuteScalarAsync();
                             }
                         }
                     }
