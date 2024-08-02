@@ -15,7 +15,8 @@ namespace bot
 {
     internal class Program
     {
-        
+        // todo: сделать удаление из бд при ливе бота с группы
+
         static async Task Main(string[] args)
         {
 
