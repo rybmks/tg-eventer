@@ -24,7 +24,6 @@ namespace bot
         {
             if (update.CallbackQuery == null || update.CallbackQuery.Data == null || update.CallbackQuery.Message == null)
                 return;
-            
 
             var callbackQuery = update.CallbackQuery;
             string callbackData = callbackQuery.Data;
