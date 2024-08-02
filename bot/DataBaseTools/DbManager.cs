@@ -110,6 +110,8 @@ namespace bot
 
                 using var transaction = await connection.BeginTransactionAsync();
 
+                await EnsureUserExistsAsync(user, connection); 
+
                 long event_id = await CheckEventExists(chatId, eventName, connection);
 
                 if (event_id > 0)
