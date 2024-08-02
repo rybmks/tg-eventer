@@ -9,6 +9,7 @@ using Telegram.Bot.Types.Enums;
 using Microsoft.Extensions.Configuration;
 using System.Net.WebSockets;
 using System.Reflection;
+using bot.Interfaces;
 
 namespace bot
 {
@@ -17,23 +18,25 @@ namespace bot
         
         static async Task Main(string[] args)
         {
+
+            ILogger logger = new ConsoleLogger();
+
+
             string currentDirectory = Directory.GetCurrentDirectory();
-
             string projectRootDirectory = GetProjectRootDirectory(currentDirectory);
-
             string cfgPath = Path.Combine(projectRootDirectory, "cfg", "appsettings.json");
 
 
             var config = new ConfigurationBuilder().AddJsonFile(cfgPath).Build();
             
             string? token = config["TelegramBot:Token"];
-
-            if (token == null) 
+            string? connectionString = config["TelegramBot:ConnectionString"];
+            if (token == null || connectionString == null) 
             {
-                Console.WriteLine("Set token to cfg!");
+                logger.Error("Set token and connection string to cfg!");
                 return;
             }
-
+            BotServicesContainer.ConnectionString = connectionString;
             TelegramBotClient botClient = new TelegramBotClient(token);
             BotServicesContainer.BotClient = botClient;
 
@@ -53,6 +56,7 @@ namespace bot
 
             await CommandsHandler.ShowCommands();
 
+            BotServicesContainer.StartedAt = DateTime.Now.ToUniversalTime();
             botClient.StartReceiving(
                 BotUpdates.Update,
                 BotUpdates.Error,
@@ -60,7 +64,7 @@ namespace bot
                 cancellationToken
                 );
 
-            Console.WriteLine("bot is started");
+            logger.Info("bot is started");
             Console.ReadLine();
             cts.Cancel();
         }
